@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <service class="Doctrine\Common\Annotations\AnnotationReader" id="doctrine_mirror.annotation_reader"/>
+        <service class="Desarrolla2\DoctrineMirrorBundle\EventSubscriber\EntitySubscriber"
+                 id="doctrine_mirror.event_subscriber.remote_entity_subscriber">
+            <argument id="doctrine_mirror.handler" type="service"/>
+            <argument>%doctrine_mirror.active%</argument>
+            <tag name="doctrine.event_subscriber"/>
+        </service>
+
+        <service class="Desarrolla2\DoctrineMirrorBundle\Mapper\AlwaysMapper"
+                 id="doctrine_mirror.mapper.always"/>
+
+        <service class="Desarrolla2\DoctrineMirrorBundle\Factory\MirrorHandlerFactory"
+                 id="doctrine_mirror.factory.handler">
+            <argument id="service_container" type="service"/>
+            <argument>%doctrine_mirror.mappers%</argument>
+            <argument>%doctrine_mirror.connections%</argument>
+        </service>
+        <service class="Desarrolla2\DoctrineMirrorBundle\Handler\MirrorHandler"
+                 id="doctrine_mirror.handler">
+            <factory service="doctrine_mirror.factory.handler"
+                     method="create"
+            />
+        </service>
+    </services>
+</container>

@@ -167,7 +167,8 @@ class MirrorHandler
      */
     protected function getMap($entity)
     {
-        $class = get_class($entity);
+        $class = $this->getClass($entity);
+
         if (!in_array($class, $this->mappedEntities)) {
             return false;
         }
@@ -303,7 +304,9 @@ class MirrorHandler
 
         $setter = 'set'.$remoteIdProperty;
         if (!$id) {
-            throw new \RuntimeException(sprintf('Not persisted entities is not supported "%s"', get_class($entity)));
+            throw new \RuntimeException(
+                sprintf('Not persisted entities is not supported "%s"', $this->getClass($entity))
+            );
         }
         $remoteEntity = $em->getRepository($remoteEntityName)->findOneBy([$remoteIdProperty => $id]);
         if ($remoteEntity) {
@@ -330,7 +333,7 @@ class MirrorHandler
             throw new \RuntimeException(
                 sprintf(
                     'Mapped class "%s" has not required "%s" annotations',
-                    get_class($entity),
+                    $this->getClass($entity),
                     Mirror\Entity::class
                 )
             );
@@ -346,7 +349,7 @@ class MirrorHandler
      */
     public function getMirrorPropertiesAnnotation($entity)
     {
-        $entityClass = get_class($entity);
+        $entityClass = $this->getClass($entity);
         if (!in_array($entityClass, $this->reflections['properties'])) {
             $reflection = $this->getReflectionClass($entity);
             $annotations = [];
@@ -374,7 +377,7 @@ class MirrorHandler
      */
     public function getMirrorManyToOneAnnotation($entity)
     {
-        $entityClass = get_class($entity);
+        $entityClass = $this->getClass($entity);
         if (!in_array($entityClass, $this->reflections['manyToOne'])) {
             $reflection = $this->getReflectionClass($entity);
             $annotations = [];
@@ -408,7 +411,7 @@ class MirrorHandler
      */
     public function getMirrorMethodsAnnotation($entity)
     {
-        $entityClass = get_class($entity);
+        $entityClass = $this->getClass($entity);
         if (!in_array($entityClass, $this->reflections['methods'])) {
             $reflection = $this->getReflectionClass($entity);
             $annotations = [];
@@ -437,12 +440,22 @@ class MirrorHandler
     protected function getReflectionClass($entity)
     {
         if (!is_string($entity)) {
-            return $this->getReflectionClass(get_class($entity));
+            return $this->getReflectionClass($this->getClass($entity));
         }
         if (!in_array($entity, $this->reflections['class'])) {
             $this->reflections['class'][$entity] = new \ReflectionClass($entity);
         }
 
         return $this->reflections['class'][$entity];
+    }
+
+    /**
+     * @param mixed $entity
+     *
+     * @return string
+     */
+    protected function getClass($entity)
+    {
+        return str_replace('Proxies\\__CG__\\', '', get_class($entity));
     }
 }
